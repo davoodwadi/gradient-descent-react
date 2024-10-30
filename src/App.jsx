@@ -24,7 +24,7 @@ function round(num) {
 }
 
 function App() {
-  let numPoints = 11
+  let numPoints = 110
   const [lr, setLR] = useState(0.1)
   function LogSlider() {
     return (
@@ -40,42 +40,70 @@ function App() {
     )
   }
 
-  const square = (x) => {
-    if (typeof x === "object") {
-      return x.map((item) => (item - 5) ** 2)
-    } else {
+  const getLoss = (x, objective) => {
+    if (objective === "square") {
       return (x - 5) ** 2
+    } else if (objective === "sin") {
+      return Math.sin(x) * 10 + (x - 5) ** 2
+    } else if (objective === "saddle") {
+      return Math.cos(x) * 10 + (x - 5) ** 2
     }
   }
-  const [w, setW] = useState(makeArr(0, 10, numPoints))
-  const [loss, setLoss] = useState(square(w))
+  const getGrad = (x, objective) => {
+    if (objective === "square") {
+      return 2 * (x - 5)
+    } else if (objective === "sin") {
+      return Math.cos(x) * 10 + 2 * (x - 5)
+    } else if (objective === "saddle") {
+      return -10 * Math.sin(x) + 2 * (x - 5)
+    }
+  }
 
-  const randomIndex = Math.floor(Math.random() * w.length)
+  const [objective, setObjective] = useState("saddle")
+  // const [w, setW] = useState(makeArr(0, 10, numPoints))
+  // const [loss, setLoss] = useState(w.map((item) => getLoss(item, objective)))
+  let w = makeArr(0, 10, numPoints)
+  let loss = w.map((item) => getLoss(item, objective))
+
   const getRandomPoint = () => {
+    const randomIndex = Math.floor(Math.random() * w.length)
     return { w: w[randomIndex], loss: loss[randomIndex] }
   }
-  const startingPoint = getRandomPoint()
+  let startingPoint = getRandomPoint()
   console.log("startingPoint", startingPoint)
   const [currentPoint, setCurrentPoint] = useState(startingPoint)
   const initializeW = () => {
     setCurrentPoint(getRandomPoint)
   }
-  // console.log("loss", loss);
+
   // zip the w and loss
   const initialData = w.map((item, i) => {
     return { w: item, loss: loss[i] }
   })
 
-  const [data, setData] = useState(initialData)
+  // const [data, setData] = useState(initialData)
+  const data = initialData
 
-  console.log("currentPoint", currentPoint)
-  console.log("lr", lr)
+  // console.log("currentPoint", currentPoint)
+  // console.log("lr", lr)
 
   const update = () => {
-    const grad = 2 * (currentPoint.w - 5)
+    const grad = getGrad(currentPoint.w, objective)
     const updatedW = currentPoint.w - grad * lr
-    setCurrentPoint({ w: updatedW, loss: square(updatedW) })
+    setCurrentPoint({ w: updatedW, loss: getLoss(updatedW, objective) })
     console.log("currentPoint", currentPoint)
+  }
+  const changeObjective = (e) => {
+    console.log("objective", objective)
+    console.log("e.target.value", e.target.value)
+    setObjective(e.target.value)
+    w = makeArr(0, 10, numPoints)
+    loss = w.map((item) => getLoss(item, e.target.value))
+    startingPoint = getRandomPoint()
+
+    setCurrentPoint(startingPoint)
+    // setData(initialData)
+    console.log("objective", objective)
   }
 
   return (
@@ -116,6 +144,43 @@ function App() {
           {/* <ReferenceDot x={5.5} y={2} r={4} fill="#8884d8" stroke="none" /> */}
         </LineChart>
       </ResponsiveContainer>
+      <div className="mx-auto py-4 flex px-4 items-center justify-center">
+        <label className=" px-2 items-center justify-center">
+          <input
+            type="radio"
+            name="obj"
+            value="sin"
+            // Checking this radio button if the selected option is "Male"
+            checked={objective === "sin"}
+            onChange={changeObjective}
+          />
+          Sine
+        </label>
+
+        <label className=" px-2 items-center justify-center">
+          <input
+            type="radio"
+            name="obj"
+            value="square"
+            // Checking this radio button if the selected option is "Male"
+            checked={objective === "square"}
+            onChange={changeObjective}
+          />
+          Square
+        </label>
+        <label className=" px-2 items-center justify-center">
+          <input
+            type="radio"
+            name="obj"
+            value="saddle"
+            // Checking this radio button if the selected option is "Male"
+            checked={objective === "saddle"}
+            onChange={changeObjective}
+          />
+          Saddle
+        </label>
+      </div>
+
       <div className="mx-auto py-4 flex-col px-4 items-center justify-center">
         <p>w: {round(currentPoint.w)}</p>
         <p>loss: {round(currentPoint.loss)}</p>
