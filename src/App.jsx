@@ -1,5 +1,6 @@
-import { useState } from "react";
-import "./App.css";
+import { useState } from "react"
+import "./App.css"
+
 import {
   LineChart,
   Line,
@@ -8,74 +9,121 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-} from "recharts";
+  ResponsiveContainer,
+  AreaChart,
+  ReferenceLine,
+  Area,
+  Scatter,
+  ScatterChart,
+  ReferenceDot,
+} from "recharts"
+import { makeArr } from "../tools/tools"
 
 function App() {
-  // const [count, setCount] = useState(0);
-  const data = [
-    {
-      name: "Page A",
-      uv: 4000,
-      pv: 2400,
-      amt: 2400,
-    },
-    {
-      name: "Page B",
-      uv: 3000,
-      pv: 1398,
-      amt: 2210,
-    },
-    {
-      name: "Page C",
-      uv: 2000,
-      pv: 9800,
-      amt: 2290,
-    },
-    {
-      name: "Page D",
-      uv: 2780,
-      pv: 3908,
-      amt: 2000,
-    },
-    {
-      name: "Page E",
-      uv: 1890,
-      pv: 4800,
-      amt: 2181,
-    },
-    {
-      name: "Page F",
-      uv: 2390,
-      pv: 3800,
-      amt: 2500,
-    },
-    {
-      name: "Page G",
-      uv: 3490,
-      pv: 4300,
-      amt: 2100,
-    },
-  ];
+  let numPoints = 11
+  const [lr, setLR] = useState(0.1)
+  function LogSlider() {
+    return (
+      <input
+        type="range"
+        defaultValue={Math.log10(lr)}
+        min={-10}
+        max={1}
+        onChange={(e) => setLR(Math.pow(10, e.target.value))}
+        step={1}
+      />
+    )
+  }
+
+  const square = (x) => {
+    if (typeof x === "object") {
+      return x.map((item) => (item - 5) ** 2)
+    } else {
+      return (x - 5) ** 2
+    }
+  }
+  const [w, setW] = useState(makeArr(0, 10, numPoints))
+  const [loss, setLoss] = useState(square(w))
+
+  const randomIndex = Math.floor(Math.random() * w.length)
+  const getRandomPoint = () => {
+    return { w: w[randomIndex], loss: loss[randomIndex] }
+  }
+  const startingPoint = getRandomPoint()
+  console.log("startingPoint", startingPoint)
+  const [currentPoint, setCurrentPoint] = useState(startingPoint)
+  const initializeW = () => {
+    setCurrentPoint(getRandomPoint)
+  }
+  // console.log("loss", loss);
+  // zip the w and loss
+  const initialData = w.map((item, i) => {
+    return { w: item, loss: loss[i] }
+  })
+
+  const [data, setData] = useState(initialData)
+
+  console.log("currentPoint", currentPoint)
+  console.log("lr", lr)
+
+  const update = () => {
+    const grad = 2 * (currentPoint.w - 5)
+    const updatedW = currentPoint.w - grad * lr
+    setCurrentPoint({ w: updatedW, loss: square(updatedW) })
+    console.log("currentPoint", currentPoint)
+  }
 
   return (
-    <>
-      <h1 className="text-2xl font-bold">Gradient Descent Algorithm</h1>
-      <LineChart
-        width={730}
-        height={250}
-        data={data}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="1 1" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="pv" stroke="#8884d8" />
-        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-      </LineChart>
-    </>
-  );
+    <div className="mx-auto h-64">
+      <ResponsiveContainer height="100%" width="100%">
+        <LineChart
+          // width={730}
+          // height={250}
+          data={data}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="w"
+            type="number"
+            label={{ value: "w", position: "insideBottomRight", offset: -10 }}
+          />
+          <YAxis
+            type="number"
+            label={{ value: "loss", angle: -90, position: "insideLeft" }}
+          />
+          <Tooltip />
+          <Legend />
+          {/* <Line type="monotone" dataKey="pv" stroke="#8884d8" /> */}
+          <Line type="monotone" dataKey="loss" stroke="#82ca9d" />
+          <ReferenceDot
+            x={currentPoint.w}
+            y={currentPoint.loss}
+            label={{
+              value: "current w",
+              position: "insideBottomRight",
+              offset: -10,
+            }}
+            r={4}
+            fill="#8884d8"
+            stroke="none"
+          />
+          {/* <ReferenceDot x={5.5} y={2} r={4} fill="#8884d8" stroke="none" /> */}
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="flex mx-auto bg-slate-100">
+        <button onClick={initializeW}>Randomize w</button>
+      </div>
+      <div>
+        <span>Learning Rate</span>
+        <LogSlider />
+        <span>{lr}</span>
+      </div>
+      <div>
+        <button onClick={update}>Step</button>
+      </div>
+    </div>
+  )
 }
 
-export default App;
+export default App
