@@ -19,12 +19,17 @@ import {
 } from "recharts"
 import { makeArr } from "../tools/tools"
 
+function round(num) {
+  return Math.round((num + Number.EPSILON) * 100) / 100
+}
+
 function App() {
   let numPoints = 11
   const [lr, setLR] = useState(0.1)
   function LogSlider() {
     return (
       <input
+        className="accent-indigo-800"
         type="range"
         defaultValue={Math.log10(lr)}
         min={-10}
@@ -74,8 +79,8 @@ function App() {
   }
 
   return (
-    <div className="mx-auto h-64">
-      <ResponsiveContainer height="100%" width="100%">
+    <div className="flex-col mx-auto px-4 py-4 items-center justify-center h-screen">
+      <ResponsiveContainer height="50%" width="100%">
         <LineChart
           // width={730}
           // height={250}
@@ -111,16 +116,36 @@ function App() {
           {/* <ReferenceDot x={5.5} y={2} r={4} fill="#8884d8" stroke="none" /> */}
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex mx-auto bg-slate-100">
-        <button onClick={initializeW}>Randomize w</button>
+      <div className="mx-auto py-4 flex-col px-4 items-center justify-center">
+        <p>w: {round(currentPoint.w)}</p>
+        <p>loss: {round(currentPoint.loss)}</p>
       </div>
-      <div>
-        <span>Learning Rate</span>
-        <LogSlider />
-        <span>{lr}</span>
-      </div>
-      <div>
-        <button onClick={update}>Step</button>
+      <div className="mx-auto py-4 flex px-4 ">
+        <div className="mx-auto py-4 flex items-center justify-center">
+          <button
+            className="bg-indigo-200 rounded-md p-3"
+            onClick={initializeW}
+          >
+            Randomize w
+          </button>
+        </div>
+        <div className="mx-auto pt-2 flex-col items-center justify-center ">
+          <div className="mx-auto pt-2 flex items-center justify-center ">
+            <p>Learning Rate</p>
+          </div>
+          <div className="mx-auto flex items-center justify-center ">
+            <LogSlider />
+          </div>
+          <div className="mx-auto pb-2 flex items-center justify-center ">
+            <p>{lr}</p>
+          </div>
+        </div>
+
+        <div className="mx-auto py-2 flex items-center justify-center">
+          <button className="bg-indigo-200 rounded-md p-3" onClick={update}>
+            Step
+          </button>
+        </div>
       </div>
     </div>
   )
